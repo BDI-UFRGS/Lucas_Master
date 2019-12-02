@@ -29,8 +29,8 @@ rpy2.robjects.r['options'](warn=-1)
 
 
 class e_scenarios(Enum):
-    RAW = ('raw',)
     COMPOSITIONAL_LOCALIZATIONAL = ('compositional_groups', 'localizational_groups')
+    RAW = ('raw',)
 
 
 def argument_parser(args) -> argparse.Namespace:
