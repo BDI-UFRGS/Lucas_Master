@@ -74,6 +74,8 @@ def argument_parser(args) -> argparse.Namespace:
                         help='Preference for Affinity Propagation')
     parser.add_argument('--scenario', type=str, help='List of scenarios of features to be used', required=True,
                         choices=[scenario.name for scenario in e_scenarios])
+    parser.add_argument('--max-gens-without-improvement', type=int, default=200,
+                        help='maximum number of generations without improvement before the meta algorithm stops')
 
     args = parser.parse_args(args=args)
 
@@ -94,10 +96,7 @@ def run(args=None):
     meta_clustering = select_meta_clustering_algorithm(args, clustering_algorithm, dataset, y)
 
     start_time = datetime.datetime.now()
-    if args.eval_rate:
-        meta_clustering.fit(dataset.values, y=y)
-    else:
-        meta_clustering.fit(dataset.values)
+    meta_clustering.fit(dataset.values, y=y)
     end_time = datetime.datetime.now()
 
     if type(clustering_algorithm) == cluster.KMeans:
@@ -172,12 +171,14 @@ def select_meta_clustering_algorithm(args, clustering_algorithm, dataset, y):
         meta_clustering = GAClustering(algorithm=clustering_algorithm, n_generations=args.num_gen, perfect=args.perfect,
                                        min_features=args.min_features,
                                        fitness_metric=args.fitness_metric, pop_size=args.pop_size,
-                                       pop_eval_rate=args.eval_rate)
+                                       pop_eval_rate=args.eval_rate,
+                                       max_gens_without_improvement=args.max_gens_without_improvement)
     elif args.strategy == 'random_ga':
         meta_clustering = GAClustering(algorithm=None, n_generations=args.num_gen, perfect=args.perfect,
                                        min_features=args.min_features,
                                        fitness_metric=args.fitness_metric, pop_size=args.pop_size,
-                                       pop_eval_rate=args.eval_rate, n_clusters=len(unique_labels(y)))
+                                       pop_eval_rate=args.eval_rate, n_clusters=len(unique_labels(y)),
+                                       max_gens_without_improvement=args.max_gens_without_improvement)
     elif args.strategy == 'pso':
         meta_clustering = PSOClustering(algorithm=clustering_algorithm, n_generations=args.num_gen,
                                         perfect=args.perfect,
@@ -205,7 +206,7 @@ def select_clustering_algorithm(args, y):
         clustering_algorithm = cluster.AgglomerativeClustering(n_clusters=len(unique_labels(y)),
                                                                linkage='ward')
     elif args.cluster_algorithm == 'kmeans':
-        clustering_algorithm = cluster.KMeans(n_clusters=len(unique_labels(y)), n_init=10)
+        clustering_algorithm = cluster.KMeans(n_clusters=len(unique_labels(y)), n_init=100)
     elif args.cluster_algorithm == 'affinity-propagation':
         clustering_algorithm = cluster.AffinityPropagation(preference=float(args.preference))
     elif args.cluster_algorithm == 'perfect-classifier':

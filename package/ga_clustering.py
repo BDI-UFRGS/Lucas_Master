@@ -93,7 +93,8 @@ class GAClustering(sklearn.base.BaseEstimator, sklearn.base.ClusterMixin):
 
     def __init__(self, algorithm=None, n_generations=100, perfect=False,
                  min_features=5, max_features=1000, fitness_metric='silhouette_sklearn',
-                 pop_size=128, pop_eval_rate=0, n_clusters=2):
+                 pop_size=128, pop_eval_rate=0, n_clusters=2,
+                 max_gens_without_improvement=200):
         self.algorithm = algorithm
         self.n_generations = n_generations
         self.perfect = perfect
@@ -103,6 +104,7 @@ class GAClustering(sklearn.base.BaseEstimator, sklearn.base.ClusterMixin):
         self.pop_size = pop_size
         self.pop_eval_rate = pop_eval_rate
         self.n_clusters = n_clusters
+        self.max_gens_without_improvement = max_gens_without_improvement
 
     def fit(self, X, y=None):
         population_rate = math.ceil(self.pop_eval_rate * self.pop_size)
@@ -120,11 +122,12 @@ class GAClustering(sklearn.base.BaseEstimator, sklearn.base.ClusterMixin):
         population = toolbox.population(n=self.pop_size)
         ind = random.choice(range(len(population)))
         if self.algorithm is not None:
-            population[ind][:] = [0]*X.shape[1]
+            population[ind][:] = [0] * X.shape[1]
             population = list(map(partial(force_bounds, self.min_features, self.max_features), population))
 
-        evaluate_rate_methods = ['accuracy', 'adjusted_rand_score']
-        evaluate_rate_function = partial(eval_multiple, X, self.algorithm, evaluate_rate_methods, samples_dist_matrix, y)
+        evaluate_rate_methods = ['accuracy', 'adjusted_rand_score', 'silhouette_sklearn', 'SD_Scat']
+        evaluate_rate_function = partial(eval_multiple, X, self.algorithm, evaluate_rate_methods, samples_dist_matrix,
+                                         y)
 
         global_best = None
         feature_selection_rate = []
@@ -132,7 +135,8 @@ class GAClustering(sklearn.base.BaseEstimator, sklearn.base.ClusterMixin):
         metrics = []
         gens_since_last_improvment = 0
         current_silhouette = 0
-        with tqdm(total=self.n_generations, desc=f'{n_threads} threads', postfix={'gens_without_improv': gens_since_last_improvment}) as pbar:
+        with tqdm(total=self.n_generations, desc=f'{n_threads} threads',
+                  postfix={'gens_without_improv': gens_since_last_improvment}) as pbar:
             for gen in range(self.n_generations):
                 pbar.update(1)
                 if population_rate > 0:
@@ -159,7 +163,7 @@ class GAClustering(sklearn.base.BaseEstimator, sklearn.base.ClusterMixin):
 
                 feature_selection_rate.append(list(map(lambda x: x / len(population), np.sum(population, axis=0))))
 
-                if gens_since_last_improvment >= 200:
+                if gens_since_last_improvment >= self.max_gens_without_improvement:
                     break
 
         metrics = pd.DataFrame(metrics, columns=evaluate_rate_methods + ['generation'])
