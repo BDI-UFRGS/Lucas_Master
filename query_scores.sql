@@ -65,4 +65,24 @@ FROM result
          INNER JOIN arg AS arg_dataset ON arg_dataset.result_id = result.id AND arg_dataset.name = 'input_file'
          INNER JOIN arg AS arg_scenario ON arg_scenario.result_id = result.id AND arg_scenario.name = 'scenario'
          INNER JOIN selected_feature AS selected_features ON selected_features.result_id = result.id
-GROUP BY result.id
+GROUP BY result.id;
+
+-- Query scores for results -------------------------------------------------------------------------------------------------
+SELECT arg_cluster.value                                                          AS "CLUSTER METHOD",
+       arg_dataset.value                                                          AS "DATASET",
+       arg_scenario.value                                                         AS "SCENARIO",
+       (julianday(result.end_time) - julianday(result.start_time)) * 24 * 60 * 60 AS "SECONDS ELAPSED",
+       GROUP_CONCAT(scores.name)                                                  AS "SCORES NAMES",
+       GROUP_CONCAT(scores.value)                                                 AS "SCORES VALUES",
+       result.id                                                                  AS "RESULT ID"
+FROM result
+         INNER JOIN arg AS arg_cluster ON arg_cluster.result_id = result.id AND arg_cluster.name = 'cluster_algorithm'
+         INNER JOIN arg AS arg_dataset ON arg_dataset.result_id = result.id AND arg_dataset.name = 'input_file'
+         INNER JOIN arg AS arg_scenario ON arg_scenario.result_id = result.id AND arg_scenario.name = 'scenario'
+         INNER JOIN score AS scores ON scores.result_id = result.id
+GROUP BY result.id;
+
+-- Query the number of selected features for every run (concatenate with the result of the query above) ----------------------
+SELECT COUNT(selected_feature.id) AS "NUMBER OF SELECTED FEATURES"
+FROM selected_feature
+GROUP BY selected_feature.result_id

@@ -68,6 +68,12 @@ def argument_parser(args) -> argparse.Namespace:
                                                                                                     'ward_p',
                                                                                                     'random_ga',
                                                                                                     'none'])
+    parser.add_argument('--affinity', type=str, default='euclidean',
+                        help='Agglomerative affinity (Only used for cluster-algorithm=\'agglomerative\')',
+                        choices=['euclidean', 'manhattan'])
+    parser.add_argument('--linkage', type=str, default='complete',
+                        help='Agglomerative linkage (Only used for cluster-algorithm=\'agglomerative\')',
+                        choices=['complete', 'single', 'ward'])
     parser.add_argument('--p_ward', type=float, default=2,
                         help='Ward P exponential value')
     parser.add_argument('--preference', type=float, default=0,
@@ -204,7 +210,8 @@ def select_clustering_algorithm(args, y):
     clustering_algorithm = None
     if args.cluster_algorithm == 'agglomerative':
         clustering_algorithm = cluster.AgglomerativeClustering(n_clusters=len(unique_labels(y)),
-                                                               linkage='ward')
+                                                               affinity=args.affinity,
+                                                               linkage=args.linkage)
     elif args.cluster_algorithm == 'kmeans':
         clustering_algorithm = cluster.KMeans(n_clusters=len(unique_labels(y)), n_init=100)
     elif args.cluster_algorithm == 'affinity-propagation':
