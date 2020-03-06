@@ -1,6 +1,6 @@
 from enum import Enum
 
-from package.evaluation_functions import ALLOWED_FITNESSES
+from package.evaluation_functions import CLUSTER_CRIT_ALLOWED_FITNESSES
 from package.main import run, e_scenarios
 
 
@@ -79,58 +79,118 @@ if __name__ == '__main__':
     #                     f'--scenario', scenario.name
     #                 ]
     #                 run_experiment(input_args)
-    # # 2 Experimentos avaliando as métricas internas de qualidade dos clusters
-    # database = 'results_2.db'
-    # for metric, _ in CLUSTER_CRIT_ALLOWED_FITNESSES:
-    #     for dataset in e_datasets:
-    #         for scenario in e_scenarios:
-    #             input_args = [
-    #                 dataset.value,
-    #                 '2',
-    #                 '--level', 'features_groups',
-    #                 '--num-gen', '200',
-    #                 '--pop-size', '128',
-    #                 # '--perfect',
-    #                 '--eval-rate', '0.2',
-    #                 '--min-features', '2',
-    #                 f'--fitness-metric', f'{metric}',
-    #                 f'--cluster-algorithm', 'agglomerative',
-    #                 f'--db-file', f'{database}',
-    #                 '--strategy', 'ga',
-    #                 # '--p_ward', '0',
-    #                 # '--preference', '0',
-    #                 f'--scenario', f'{scenario.name}',
-    #             ]
-    #             run_experiment(input_args)
+    # 2 Experimentos avaliando as métricas internas de qualidade dos clusters
+    database = 'results_2_1.db'
+    i = 0
+    for metric, _ in CLUSTER_CRIT_ALLOWED_FITNESSES:
+        for dataset in e_datasets:
+            for scenario in e_scenarios:
+                i += 1
+                if i <= 58:
+                    continue
+                if metric == 'Gamma':
+                    continue
+                print(i)
+                input_args = [
+                    dataset.value,
+                    '2',
+                    '--level', 'features_groups',
+                    '--num-gen', '1000',
+                    '--pop-size', '50',
+                    # '--perfect',
+                    '--eval-rate', '0',
+                    '--min-features', '2',
+                    f'--fitness-metric', f'{metric}',
+                    f'--cluster-algorithm', 'agglomerative',
+                    f'--db-file', f'{database}',
+                    '--strategy', 'ga',
+                    # '--p_ward', '0',
+                    # '--preference', '0',
+                    f'--scenario', f'{scenario.name}',
+                    '--max-gens-without-improvement', '200',
+                    '--linkage', 'ward',
+                ]
+                run_experiment(input_args)
     # 3 Experimentos avaliando com outras abordagens de seleção de features (PCA,...)
     # database = 'results_3.db'
     # 4 Experimento mostrando o limite teórico do coeficiente de silhuete para os datasets selecionados
-    database = 'results_6.db'
-    for _ in range(10):
-        for scenario in e_scenarios:
-            for dataset in e_datasets:
-                for fitness, _ in ALLOWED_FITNESSES:
-                    if fitness not in ['silhouette_sklearn']:
-                        continue
-                    input_args = [
-                        dataset.value,
-                        '1',
-                        '--level', 'features_groups',
-                        '--num-gen', '1000',
-                        '--pop-size', '200',
-                        '--perfect',
-                        '--eval-rate', '0',
-                        '--min-features', '2',
-                        '--fitness-metric', fitness,
-                        '--cluster-algorithm', 'agglomerative',
-                        '--db-file', database,
-                        '--strategy', 'ga',
-                        # '--p_ward', '0',
-                        # '--preference', str(PREFERENCES[scenario][dataset]),
-                        f'--scenario', scenario.name,
-                        '--max-gens-without-improvement', '100'
-                    ]
-                    run_experiment(input_args)
+    # database = 'results_7_euclidean_single.db'
+    # for _ in range(10):
+    #     for scenario in e_scenarios:
+    #         for dataset in e_datasets:
+    #             input_args = [
+    #                 dataset.value,
+    #                 '1',
+    #                 '--level', 'features_groups',
+    #                 '--num-gen', '1000',
+    #                 '--pop-size', '50',
+    #                 '--perfect',
+    #                 '--eval-rate', '0',
+    #                 '--min-features', '2',
+    #                 '--fitness-metric', 'silhouette_sklearn',
+    #                 '--cluster-algorithm', 'agglomerative',
+    #                 '--db-file', database,
+    #                 '--strategy', 'ga',
+    #                 # '--p_ward', '0',
+    #                 # '--preference', str(PREFERENCES[scenario][dataset]),
+    #                 f'--scenario', scenario.name,
+    #                 '--max-gens-without-improvement', '200',
+    #                 '--affinity', 'euclidean',
+    #                 '--linkage', 'single'
+    #             ]
+    #             run_experiment(input_args)
+    #
+    # database = 'results_7_euclidean_complete.db'
+    # for _ in range(10):
+    #     for scenario in e_scenarios:
+    #         for dataset in e_datasets:
+    #             input_args = [
+    #                 dataset.value,
+    #                 '1',
+    #                 '--level', 'features_groups',
+    #                 '--num-gen', '1000',
+    #                 '--pop-size', '50',
+    #                 '--perfect',
+    #                 '--eval-rate', '0',
+    #                 '--min-features', '2',
+    #                 '--fitness-metric', 'silhouette_sklearn',
+    #                 '--cluster-algorithm', 'agglomerative',
+    #                 '--db-file', database,
+    #                 '--strategy', 'ga',
+    #                 # '--p_ward', '0',
+    #                 # '--preference', str(PREFERENCES[scenario][dataset]),
+    #                 f'--scenario', scenario.name,
+    #                 '--max-gens-without-improvement', '200',
+    #                 '--affinity', 'euclidean',
+    #                 '--linkage', 'complete'
+    #             ]
+    #             run_experiment(input_args)
+    #
+    # database = 'results_7_manhattan_complete.db'
+    # for _ in range(10):
+    #     for scenario in e_scenarios:
+    #         for dataset in e_datasets:
+    #             input_args = [
+    #                 dataset.value,
+    #                 '1',
+    #                 '--level', 'features_groups',
+    #                 '--num-gen', '1000',
+    #                 '--pop-size', '50',
+    #                 '--perfect',
+    #                 '--eval-rate', '0',
+    #                 '--min-features', '2',
+    #                 '--fitness-metric', 'silhouette_sklearn',
+    #                 '--cluster-algorithm', 'agglomerative',
+    #                 '--db-file', database,
+    #                 '--strategy', 'ga',
+    #                 # '--p_ward', '0',
+    #                 # '--preference', str(PREFERENCES[scenario][dataset]),
+    #                 f'--scenario', scenario.name,
+    #                 '--max-gens-without-improvement', '200',
+    #                 '--affinity', 'manhattan',
+    #                 '--linkage', 'complete'
+    #             ]
+    #             run_experiment(input_args)
     # 5 Experimento rodando a abordagem e comparando o coeficiente de silhueta com os limite teórico e as métricas externas
     # 6 Experimentos mostrando que com reengenharia baseada em ontologia os resultados se aproximam da abordagem sem reengeharia
     # 7 Experimento mostrando o percentual de features desejáveis (de acordo com o expert) mantidas na seleção (talvez ao longo das gerações)

@@ -93,9 +93,6 @@ def confusion_matrix(args):
 
 
 def plot_correlation(db_file, axis1, axis2, color, id=None, exp_name=None):
-    if id is None and exp_name is None:
-        raise ValueError(f'Both id and exp-name attributes cannot be empty')
-
     session = local_create_session(db_file)
 
     individual_evaluations = []
@@ -112,7 +109,7 @@ def plot_correlation(db_file, axis1, axis2, color, id=None, exp_name=None):
 
         except OperationalError:
             print(f'No results found with id {id}')
-    else:
+    elif exp_name:
         try:
             results: List[Result] = session.query(Result).filter(Result.name == exp_name).all()
             if len(results) == 0:
@@ -122,6 +119,19 @@ def plot_correlation(db_file, axis1, axis2, color, id=None, exp_name=None):
 
         except OperationalError:
             print(f'No results found with name {exp_name}')
+    else:
+        try:
+            results: List[Result] = session.query(Result).all()
+            if len(results) == 0:
+                raise ValueError(f'No results found with name {exp_name}')
+
+            if len(results) == 1:
+                individual_evaluations = results[0].individual_evaluations
+            else:
+                individual_evaluations = pd.concat([result.individual_evaluations for result in results])
+
+        except OperationalError:
+            print(f'No results found')
 
     df = individual_evaluations
 
@@ -133,7 +143,9 @@ def plot_correlation(db_file, axis1, axis2, color, id=None, exp_name=None):
 
     plt.figure()
     x = df[axis1].values
+    x = [t[0] for t in x]
     y = df[axis2].values
+    y = [t[0] for t in y]
     c = df[color].values
     points = plt.scatter(x, y, c=c, s=1, cmap='viridis', alpha=0.5)
     plt.colorbar(points, label=color)
