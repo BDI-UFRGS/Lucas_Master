@@ -17,3 +17,9 @@ R
 ```r
 > install.packages('clusterCrit')
 ```
+
+## Usage
+```console
+cd package
+python main.py -h
+```
